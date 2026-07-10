@@ -662,14 +662,24 @@ async function renderTrack(){
       const stageIndex = STAGES.indexOf(issue.status);
       const cat = CATEGORIES.find(c=>c.id===issue.category);
       const icon = cat ? cat.icon : 'pothole';
+
+      const assignedStr = issue.assigned_labor_name 
+        ? `<span>Worker Assigned (${issue.assigned_labor_status || 'idle'})</span>`
+        : '<span>Worker: Unassigned</span>';
+
+      const locationLink = (issue.assigned_labor_status === 'working' && issue.assigned_labor_lat)
+        ? ` <a href="https://www.google.com/maps?q=${issue.assigned_labor_lat},${issue.assigned_labor_lng}" target="_blank" style="color:var(--stamp-blue); font-weight:bold;">[Track Live Location]</a>`
+        : '';
+
       return '<div class="docket">'
         + '<div class="docket-icon">'+ICONS[icon === 'lamp' ? 'lamp' : icon === 'garbage' ? 'garbage' : icon === 'drop' ? 'drop' : 'pothole']+'</div>'
         + '<div class="docket-main">'
           + '<div class="docket-id">TICKET ID: #'+issue.id+' &bull; Category: '+issue.category.replace('_',' ')+'</div>'
           + '<div class="docket-desc" style="font-weight:700; font-size: 15px;">'+escapeHtml(issue.title)+'</div>'
           + '<div class="docket-desc">'+escapeHtml(issue.description)+'</div>'
-          + '<div class="docket-meta"><span>Routed to: '+issue.department_name+'</span><span>Location: '+issue.latitude+', '+issue.longitude+'</span></div>'
+          + '<div class="docket-meta"><span>Routed to: '+issue.department_name+'</span><span>Location: '+issue.latitude+', '+issue.longitude+'</span>' + assignedStr + locationLink + '</div>'
           + (issue.photo ? '<div style="margin-top:8px;"><img src="'+issue.photo+'" class="photo-thumb" style="width:140px;height:100px;object-fit:cover;border:1.5px solid var(--line);border-radius:4px;"></div>' : '')
+          + (issue.resolved_photo ? '<div style="margin-top:8px; display:inline-block;"><span style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">Resolution Photo:</span><img src="'+issue.resolved_photo+'" class="photo-thumb" style="width:140px;height:100px;object-fit:cover;border:1.5px solid var(--stamp-green);border-radius:4px;"></div>' : '')
           + '<div class="progress-row">'+renderStageRow(stageIndex)+'</div>'
         + '</div>'
         + '<div class="stamp '+issue.status+'">'+issue.status.replace('_',' ')+'</div>'

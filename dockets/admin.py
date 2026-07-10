@@ -1,5 +1,7 @@
 from django.contrib import admin
-from .models import Department, Issue, Upvote
+from django.contrib.auth.admin import UserAdmin
+from django.contrib.auth.models import User
+from .models import Department, Issue, Upvote, LaborProfile
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
@@ -16,3 +18,21 @@ class IssueAdmin(admin.ModelAdmin):
 class UpvoteAdmin(admin.ModelAdmin):
     list_display = ('issue', 'citizen', 'created_at')
     list_filter = ('created_at',)
+
+@admin.register(LaborProfile)
+class LaborProfileAdmin(admin.ModelAdmin):
+    list_display = ('user', 'status', 'last_location_update')
+    list_filter = ('status',)
+    search_fields = ('user__username',)
+
+class LaborProfileInline(admin.StackedInline):
+    model = LaborProfile
+    can_delete = False
+    verbose_name_plural = 'Labor Profile'
+    fk_name = 'user'
+
+class CustomUserAdmin(UserAdmin):
+    inlines = (LaborProfileInline, )
+
+admin.site.unregister(User)
+admin.site.register(User, CustomUserAdmin)

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Nagar Setu — Sign Up</title>
+<title>Nagar Setu — Field Worker Log In</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Public+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
 
@@ -14,6 +14,7 @@
   --ink-soft:#4A5570;
   --carbon:#34557A;
   --stamp-red:#9C3B2E;
+  --stamp-amber:#A6741E;
   --line:#B8A97D;
 }
 
@@ -34,7 +35,7 @@ body{
   min-height:100vh;
 }
 
-.signup-card{
+.login-card{
   width:100%;
   max-width:420px;
   border:2px solid var(--ink);
@@ -64,12 +65,12 @@ body{
 
 .seal-auth{
   width:48px;height:48px;border-radius:50%;
-  border:1.5px solid var(--carbon);
+  border:1.5px solid var(--stamp-amber);
   display:flex;align-items:center;justify-content:center;
   font-family:'Special Elite', monospace;
-  font-size:8px;color:var(--carbon);
+  font-size:8px;color:var(--stamp-amber);
   text-align:center;line-height:1.2;
-  transform:rotate(-8deg);
+  transform:rotate(5deg);
   margin:0 auto 16px;
 }
 
@@ -82,7 +83,7 @@ label{
   color:var(--ink-soft);
   margin:16px 0 6px;
 }
-input[type=text], input[type=password], input[type=email], select{
+input[type=text], input[type=password]{
   width:100%;
   border:1.5px solid var(--line);
   background:#fff;
@@ -91,21 +92,21 @@ input[type=text], input[type=password], input[type=email], select{
   font-size:14px;
   border-radius:4px;
 }
-input:focus, select:focus{outline:2px solid var(--carbon);outline-offset:1px;}
+input:focus{outline:2px solid var(--stamp-amber);outline-offset:1px;}
 
 .btn-submit{
   width:100%;
   margin-top:24px;
   font-family:'Special Elite', monospace;
   font-size:14px;
-  background:var(--ink);
+  background:var(--stamp-amber);
   color:var(--paper);
   border:none;
   padding:12px;
   border-radius:4px;
   cursor:pointer;
 }
-.btn-submit:hover{background:var(--carbon);}
+.btn-submit:hover{background:var(--ink);}
 
 .error-msg{
   font-family:'IBM Plex Mono', monospace;
@@ -129,6 +130,7 @@ input:focus, select:focus{outline:2px solid var(--carbon);outline-offset:1px;}
   color:var(--carbon);
   font-weight:700;
   text-decoration:none;
+  margin: 0 5px;
 }
 .auth-footer a:hover{
   text-decoration:underline;
@@ -137,37 +139,27 @@ input:focus, select:focus{outline:2px solid var(--carbon);outline-offset:1px;}
 </head>
 <body>
 
-<div class="signup-card">
-  <div class="seal-auth">PUBLIC<br>WORKS</div>
+<div class="login-card" style="border-color: var(--stamp-amber);">
+  <div class="seal-auth">FIELD<br>WORK</div>
   <div class="letterhead-auth">
-    <h1>Nagar Setu</h1>
-    <p>Sign Up</p>
+    <h1 style="color: var(--stamp-amber);">Labor Desk</h1>
+    <p>Field Worker Login</p>
   </div>
 
   <div class="error-msg" id="error-box" style="display:none;"></div>
 
-  <form id="signup-form">
-    {% csrf_token %}
+  <form id="labor-login-form">
     <label for="username">Username</label>
-    <input type="text" id="username" placeholder="Choose a username" required>
-
-    <label for="email">Email (Optional)</label>
-    <input type="email" id="email" placeholder="Enter email address">
+    <input type="text" id="username" placeholder="Enter worker username" required>
 
     <label for="password">Password</label>
-    <input type="password" id="password" placeholder="Choose a password" required>
+    <input type="password" id="password" placeholder="Enter worker password" required>
 
-    <label for="role">Role</label>
-    <select id="role">
-      <option value="citizen">Citizen</option>
-      <option value="labor">Labor</option>
-    </select>
-
-    <button type="submit" class="btn-submit">Register</button>
+    <button type="submit" class="btn-submit">Sign In to Dashboard</button>
   </form>
 
-  <div class="auth-footer">
-    Already have an account? <a href="/login/">Sign In here</a>
+  <div class="auth-footer" style="margin-top: 24px; border-top: 1.5px dashed var(--line); padding-top: 20px;">
+    Go to: <a href="/login/">Citizen Counter</a> | <a href="/login/admin/">Staff Desk</a>
   </div>
 </div>
 
@@ -187,34 +179,33 @@ function getCookie(name) {
   return cookieValue;
 }
 
-document.getElementById('signup-form').addEventListener('submit', async (e) => {
+document.getElementById('labor-login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const username = document.getElementById('username').value;
-  const email = document.getElementById('email').value;
   const password = document.getElementById('password').value;
-  const role = document.getElementById('role').value;
   const errorBox = document.getElementById('error-box');
 
   errorBox.style.display = 'none';
 
   try {
-    const res = await fetch('/api/signup/', {
+    const res = await fetch('/api/login/', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'X-CSRFToken': getCookie('csrftoken')
+        'X-CSRFToken': getCookie('csrftoken') || ''
       },
-      body: JSON.stringify({ username, email, password, role })
+      body: JSON.stringify({ username, password })
     });
     const data = await res.json();
     if (res.ok && data.success) {
       if (data.user.is_labor) {
-        window.location.href = '/labor/';
+          window.location.href = '/labor/';
       } else {
-        window.location.href = '/';
+          errorBox.textContent = 'Account is not configured as a field worker.';
+          errorBox.style.display = 'block';
       }
     } else {
-      errorBox.textContent = data.error || 'Registration failed.';
+      errorBox.textContent = data.error || 'Worker authentication failed.';
       errorBox.style.display = 'block';
     }
   } catch (err) {

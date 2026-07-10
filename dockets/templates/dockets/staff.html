@@ -317,15 +317,23 @@ function getCookie(name) {
 
 async function loadDepartments() {
   try {
-    const response = await fetch('/api/departments/');
-    const data = await response.json();
+    const res = await fetch('/api/departments/');
+    const data = await res.json();
     departments = data.departments;
     
-    const filterSelect = document.getElementById('inbox-dept-filter');
-    filterSelect.innerHTML = '<option value="all">All Departments</option>' +
-      departments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
-  } catch (err) {
-    console.error('Error loading departments:', err);
+    // populate inbox filter
+    const sel = document.getElementById('inbox-dept-filter');
+    sel.innerHTML = '<option value="all">All Departments</option>' 
+      + departments.map(d=>'<option value="'+d.id+'">'+d.name+'</option>').join('');
+      
+    // load labor users
+    const res2 = await fetch('/api/labor/users/');
+    const data2 = await res2.json();
+    if(data2.labor_users) {
+      laborUsers = data2.labor_users;
+    }
+  } catch(e){
+    console.error(e);
   }
 }
 
@@ -408,18 +416,35 @@ function renderInbox(){
       return `<option value="${s}" ${selected}>${label}</option>`;
     }).join('');
 
+    // Labor update options
+    const laborOptions = '<option value="">Unassigned</option>' + laborUsers.map(u => {
+      const selected = (issue.assigned_labor_id === u.id) ? 'selected' : '';
+      return `<option value="${u.id}" ${selected}>${u.username}</option>`;
+    }).join('');
+
+    const assignedStr = issue.assigned_labor_name 
+      ? `<span>Assigned to: ${issue.assigned_labor_name} (${issue.assigned_labor_status || 'idle'})</span>`
+      : '<span>Unassigned</span>';
+
+    const locationLink = (issue.assigned_labor_status === 'working' && issue.assigned_labor_lat)
+      ? ` <a href="https://www.google.com/maps?q=${issue.assigned_labor_lat},${issue.assigned_labor_lng}" target="_blank" style="color:var(--stamp-blue); font-weight:bold;">[View Live Location]</a>`
+      : '';
+
     return '<div class="docket">'
       + '<div class="docket-icon">'+ICONS[icon === 'lamp' ? 'lamp' : icon === 'garbage' ? 'garbage' : icon === 'drop' ? 'drop' : 'pothole']+'</div>'
       + '<div class="docket-main">'
         + '<div class="docket-id">TICKET ID: #'+issue.id+' &bull; Reported by: '+issue.reported_by_username+'</div>'
         + '<div class="docket-desc" style="font-weight:700; font-size:15px;">'+escapeHtml(issue.title)+'</div>'
         + '<div class="docket-desc">'+escapeHtml(issue.description)+'</div>'
-        + '<div class="docket-meta"><span>Category: '+issue.category.replace('_',' ')+'</span><span>Routed to: '+issue.department_name+'</span><span>'+issue.upvote_count+' upvotes</span><span>Location: '+issue.latitude+', '+issue.longitude+'</span></div>'
+        + '<div class="docket-meta"><span>Category: '+issue.category.replace('_',' ')+'</span><span>Routed to: '+issue.department_name+'</span><span>'+issue.upvote_count+' upvotes</span><span>Location: '+issue.latitude+', '+issue.longitude+'</span>' + assignedStr + locationLink + '</div>'
         + (issue.photo ? '<div style="margin-top:8px;"><img src="'+issue.photo+'" class="photo-thumb" style="width:140px;height:100px;object-fit:cover;border:1.5px solid var(--line);border-radius:4px;"></div>' : '')
+        + (issue.resolved_photo ? '<div style="margin-top:8px; display:inline-block;"><span style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px;">Resolution Photo:</span><img src="'+issue.resolved_photo+'" class="photo-thumb" style="width:140px;height:100px;object-fit:cover;border:1.5px solid var(--stamp-green);border-radius:4px;"></div>' : '')
         + '<div class="progress-row">'+renderStageRow(stageIndex)+'</div>'
         + '<div class="admin-row-actions">'
           + '<label style="margin: 0; font-size: 11px; font-weight: bold; margin-right: 8px;">Change Status:</label>'
           + `<select class="status-select" data-id="${issue.id}" style="width: auto; padding: 4px 8px; font-family: sans-serif; font-size:12px;">${options}</select>`
+          + '<label style="margin: 0; font-size: 11px; font-weight: bold; margin-left: 12px; margin-right: 8px;">Assign Labor:</label>'
+          + `<select class="labor-select" data-id="${issue.id}" style="width: auto; padding: 4px 8px; font-family: sans-serif; font-size:12px;">${laborOptions}</select>`
         + '</div>'
       + '</div>'
       + '<div class="stamp '+issue.status+'">'+issue.status.replace('_',' ')+'</div>'
@@ -444,6 +469,31 @@ function renderInbox(){
           await loadIssues();
         } else {
           alert("Error: " + (data.error || "Failed to update status"));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  });
+
+  list.querySelectorAll('.labor-select').forEach(sel=>{
+    sel.addEventListener('change', async ()=>{
+      const issueId = sel.dataset.id;
+      const laborId = sel.value;
+      try {
+        const res = await fetch(`/api/issues/${issueId}/assign/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ labor_id: laborId || null })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          await loadIssues();
+        } else {
+          alert("Error: " + (data.error || "Failed to assign labor"));
         }
       } catch (e) {
         console.error(e);
