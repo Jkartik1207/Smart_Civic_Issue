@@ -6,7 +6,7 @@ from django.contrib.auth import login, logout, authenticate
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.views.decorators.csrf import csrf_exempt
-
+from django.views.decorators.cache import never_cache
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
@@ -61,12 +61,14 @@ def seed_data_if_empty():
         )
 
 # HTML Page Views
+@never_cache
 def index_view(request):
     if request.user.is_authenticated and request.user.is_superuser:
         return redirect('staff')
     seed_data_if_empty()
     return render(request, 'dockets/index.html')
 
+@never_cache
 @login_required(login_url='/login/admin/')
 def staff_view(request):
     if not request.user.is_superuser:
@@ -74,6 +76,7 @@ def staff_view(request):
     seed_data_if_empty()
     return render(request, 'dockets/staff.html')
 
+@never_cache
 def login_view(request):
     if request.user.is_authenticated:
         if request.user.is_superuser:
@@ -81,6 +84,7 @@ def login_view(request):
         return redirect('index')
     return render(request, 'dockets/login.html')
 
+@never_cache
 def signup_view(request):
     if request.user.is_authenticated:
         if request.user.is_superuser:
@@ -88,6 +92,7 @@ def signup_view(request):
         return redirect('index')
     return render(request, 'dockets/signup.html')
 
+@never_cache
 def admin_login_view(request):
     if request.user.is_authenticated:
         if request.user.is_superuser:

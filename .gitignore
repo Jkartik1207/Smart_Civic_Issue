@@ -51,6 +51,7 @@ pip-delete-this-directory.txt
 # IDEs and editors
 .idea/
 .vscode/
+pyrightconfig.json
 *.swp
 *.swo
 

@@ -2,7 +2,7 @@
 
 Build a platform where citizens report civic issues (potholes, garbage overflow, broken streetlights, water leakage) with geo-tagged photos. Issues are automatically routed to the correct municipal department, tracked through status updates, and displayed on a public transparency dashboard.
 
-> **⚠️ Needs reconciling:** this repo currently has documentation for two different auth approaches — session-based Django auth (this file, originally) and DRF token auth (see API section below). Confirm which one your code actually implements and remove the other before shipping.
+> **Note:** this repo uses session-based Django auth for both standard views and DRF API endpoints. Ensure you pass the `X-CSRFToken` header for API POST/PATCH requests.
 
 ## Tech Stack
 - **Backend**: Django 4.2 + Django REST Framework (DRF)
@@ -10,7 +10,7 @@ Build a platform where citizens report civic issues (potholes, garbage overflow,
 - **Frontend**: Django Templates with dynamic JS Fetch API integration
 - **Maps**: Leaflet.js + OpenStreetMap (no API key required)
 - **Image Storage**: Local Django `MEDIA_ROOT`
-- **Auth**: Built-in Django Auth (session/cookie) *or* DRF Token Authentication — confirm which
+- **Auth**: Built-in Django Auth (session/cookie)
 
 ## Features Implemented
 1. **Geo-tagged Reporting**
@@ -69,16 +69,17 @@ Build a platform where citizens report civic issues (potholes, garbage overflow,
    - Template views: `http://127.0.0.1:8000/`
    - API root (if applicable): `http://127.0.0.1:8000/api/`
 
-## API Endpoints *(if using the DRF token-auth surface)*
+## API Endpoints
 
 | Method | Endpoint | Description |
 |---|---|---|
-| POST | `/api/auth/register/` | Register a citizen |
-| POST | `/api/auth/login/` | Login, returns a token |
-| GET | `/api/issues/` | List issues (filter by `department` or `status`) |
-| POST | `/api/issues/` | Create an issue — requires `Authorization: Token <token>` |
-| POST | `/api/issues/<id>/upvote/` | Upvote an issue (auth required, duplicates blocked) |
-| PATCH | `/api/issues/<id>/status/` | Update status — requires admin (`is_superuser`) |
+| POST | `/api/signup/` | Register a citizen |
+| POST | `/api/login/` | Login a citizen |
+| POST | `/api/login/admin/` | Login as admin |
+| GET | `/api/issues/` | List issues (filter by `department` or `scope`) |
+| POST | `/api/issues/create/` | Create an issue (auth required) |
+| POST | `/api/issues/<id>/upvote/` | Upvote an issue (auth required, duplicates toggled) |
+| POST | `/api/issues/<id>/status/` | Update status — requires admin (`is_superuser`) |
 | GET | `/api/departments/` | List departments |
 
 ## Frontend Architecture
@@ -100,4 +101,4 @@ Build a platform where citizens report civic issues (potholes, garbage overflow,
 
 ### REST integration
 - Form submissions (including photo uploads) use `FormData` via the Fetch API.
-- Auth forms retrieve the session's `csrftoken` cookie to secure POST headers *(reconcile with token-auth approach above)*.
+- Auth forms retrieve the session's `csrftoken` cookie to secure POST headers.
