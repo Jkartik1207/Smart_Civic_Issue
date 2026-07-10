@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Nagar Setu — Staff Counter</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Special+Elite&family=Public+Sans:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --kraft:#DDD0AE;
+  --kraft-dark:#C9B98C;
+  --paper:#F7F3E9;
+  --ink:#1F2A44;
+  --ink-soft:#4A5570;
+  --carbon:#34557A;
+  --stamp-red:#9C3B2E;
+  --stamp-amber:#A6741E;
+  --stamp-blue:#2F5C7A;
+  --stamp-green:#3F6B3E;
+  --line:#B8A97D;
+}
+
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--kraft);
+  background-image:
+    linear-gradient(rgba(0,0,0,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,0.015) 1px, transparent 1px);
+  background-size:24px 24px;
+  color:var(--ink);
+  font-family:'Public Sans', sans-serif;
+  padding:28px 16px 60px;
+}
+
+.wrap{max-width:920px;margin:0 auto;}
+
+/* Letterhead */
+.letterhead{
+  border:2px solid var(--ink);
+  background:var(--paper);
+  padding:18px 24px;
+  margin-bottom:0;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.letterhead h1{
+  font-family:'Special Elite', monospace;
+  font-size:26px;
+  margin:0 0 4px;
+  letter-spacing:0.5px;
+}
+.letterhead p{
+  margin:0;
+  font-size:13px;
+  color:var(--ink-soft);
+}
+.seal{
+  width:56px;height:56px;border-radius:50%;
+  border:2px solid var(--carbon);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Special Elite', monospace;
+  font-size:10px;color:var(--carbon);
+  text-align:center;line-height:1.2;
+  transform:rotate(-8deg);
+  flex-shrink:0;
+}
+
+/* Folder tabs */
+.tabs{display:flex;gap:6px;margin-top:20px;}
+.tab{
+  font-family:'Special Elite', monospace;
+  font-size:13px;
+  padding:10px 20px 9px;
+  background:var(--kraft-dark);
+  border:2px solid var(--ink);
+  border-bottom:none;
+  border-radius:8px 8px 0 0;
+  cursor:pointer;
+  color:var(--ink-soft);
+  position:relative;
+  top:1px;
+}
+.tab.active{
+  background:var(--paper);
+  color:var(--ink);
+  top:2px;
+}
+.panel{
+  border:2px solid var(--ink);
+  background:var(--paper);
+  padding:24px;
+  min-height:400px;
+}
+.hidden{display:none;}
+
+h2.section-title{
+  font-family:'Special Elite', monospace;
+  font-size:17px;
+  margin:0 0 4px;
+}
+.section-sub{font-size:13px;color:var(--ink-soft);margin:0 0 20px;}
+
+label{display:block;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-soft);margin:16px 0 6px;}
+textarea, select{
+  width:100%;
+  border:1.5px solid var(--line);
+  background:#fff;
+  padding:10px 12px;
+  font-family:'Public Sans', sans-serif;
+  font-size:14px;
+  border-radius:4px;
+}
+
+.priority-badge{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:10px;
+  font-weight:600;
+  color:var(--stamp-red);
+  border:1px solid var(--stamp-red);
+  border-radius:3px;
+  padding:1px 6px;
+  text-transform:uppercase;
+  letter-spacing:0.5px;
+}
+.admin-row-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;}
+
+/* Docket card */
+.docket{
+  position:relative;
+  background:#fff;
+  border:1.5px solid var(--line);
+  border-radius:6px;
+  padding:16px 18px 16px 26px;
+  margin-bottom:16px;
+  display:flex;
+  gap:16px;
+  flex-wrap:wrap;
+}
+.docket::before{
+  content:'';
+  position:absolute;
+  left:10px;top:8px;bottom:8px;
+  border-left:2px dashed var(--line);
+}
+.docket-icon{width:36px;height:36px;flex-shrink:0;color:var(--carbon);}
+.docket-main{flex:1;min-width:220px;}
+.docket-id{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);}
+.docket-desc{font-size:14px;margin:4px 0 8px;}
+.docket-meta{font-size:12px;color:var(--ink-soft);display:flex;gap:14px;flex-wrap:wrap;}
+.docket-meta span{white-space:nowrap;}
+.photo-thumb{width:64px;height:64px;object-fit:cover;border:1.5px solid var(--line);border-radius:4px;}
+
+.stamp{
+  font-family:'Special Elite', monospace;
+  font-size:12px;
+  border:2px solid;
+  border-radius:4px;
+  padding:4px 10px;
+  transform:rotate(-6deg);
+  text-transform:uppercase;
+  letter-spacing:1px;
+  height:fit-content;
+  align-self:flex-start;
+}
+.stamp.submitted{color:var(--stamp-red);border-color:var(--stamp-red);}
+.stamp.in_progress{color:var(--stamp-blue);border-color:var(--stamp-blue);}
+.stamp.resolved{color:var(--stamp-green);border-color:var(--stamp-green);}
+
+.progress-row{display:flex;align-items:center;gap:4px;margin-top:10px;width:100%;}
+.pstep{display:flex;align-items:center;gap:6px;font-size:10px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+.pdot{width:9px;height:9px;border-radius:50%;background:#D6CFB4;border:1.5px solid var(--line);}
+.pdot.done{background:var(--carbon);border-color:var(--carbon);}
+.pline{flex:1;height:2px;background:#D6CFB4;}
+.pline.done{background:var(--carbon);}
+
+.advance-btn{
+  font-family:'IBM Plex Mono',monospace;
+  font-size:11px;
+  border:1.5px solid var(--carbon);
+  color:var(--carbon);
+  background:#fff;
+  padding:6px 10px;
+  border-radius:4px;
+  cursor:pointer;
+  margin-top:10px;
+}
+.advance-btn:hover{background:#EEF3F6;}
+.advance-btn:disabled{border-color:#B8B8AC;color:#9a9a94;cursor:default;}
+
+.empty-state{
+  border:1.5px dashed var(--line);
+  border-radius:6px;
+  padding:30px;
+  text-align:center;
+  color:var(--ink-soft);
+  font-size:13px;
+}
+
+/* Dashboard */
+.metric-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:24px;}
+.metric-card{background:var(--kraft-dark);border-radius:6px;padding:14px 16px;}
+.metric-card .num{font-family:'Special Elite',monospace;font-size:26px;display:block;}
+.metric-card .lbl{font-size:11px;text-transform:uppercase;letter-spacing:0.5px;color:var(--ink-soft);}
+
+.dash-section{margin-bottom:26px;}
+.bar-row{display:grid;grid-template-columns:130px 1fr 40px;align-items:center;gap:10px;margin-bottom:8px;font-size:12px;}
+.bar-track{background:#E8E1CB;border-radius:3px;height:12px;overflow:hidden;}
+.bar-fill{background:var(--carbon);height:100%;}
+.bar-fill.dept{background:var(--stamp-green);}
+
+.feed-item{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  border-bottom:1px solid #E2D9BC;
+  padding:12px 0;
+}
+.feed-item:last-child{border-bottom:none;}
+.feed-body{flex:1;font-size:13px;}
+.feed-meta{font-size:11px;color:var(--ink-soft);margin-top:2px;}
+
+footer.note{
+  text-align:center;
+  font-size:11px;
+  color:var(--ink-soft);
+  margin-top:14px;
+  font-family:'IBM Plex Mono',monospace;
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="letterhead">
+    <div>
+      <h1>Nagar Setu</h1>
+      <p>Municipal Corporation of Rajkot &mdash; Staff Counter</p>
+      <p style="margin-top: 8px; font-weight: 600; color: var(--carbon);">Active Session: {{ request.user.username }} (Superuser) &nbsp;|&nbsp; <a href="/logout/" style="color: var(--stamp-red); text-decoration: none;">Log Out</a></p>
+    </div>
+    <div class="seal">OFFICE<br>OF<br>PUBLIC<br>WORKS</div>
+  </div>
+
+  <div class="tabs" id="tabs-container"></div>
+
+  <div class="panel" id="panel-inbox">
+    <h2 class="section-title">Department inbox</h2>
+    <p class="section-sub">Signed in as ward office staff. Filter by department to see what's been routed to you, update stage, and resolve issues.</p>
+    
+    <label>Department mailbox</label>
+    <select id="inbox-dept-filter"></select>
+    
+    <div id="inbox-list" style="margin-top:18px;"></div>
+  </div>
+
+  <div class="panel hidden" id="panel-dashboard">
+    <h2 class="section-title">Ward transparency dashboard</h2>
+    <p class="section-sub">Every docket filed across the city, department performance, and what residents are pressing for.</p>
+
+    <div class="metric-grid" id="metric-grid"></div>
+
+    <div class="dash-section">
+      <h2 class="section-title" style="font-size:14px;">Issues by category</h2>
+      <div id="cat-bars"></div>
+    </div>
+
+    <div class="dash-section">
+      <h2 class="section-title" style="font-size:14px;">Department resolution rate</h2>
+      <div id="dept-bars"></div>
+    </div>
+
+    <div class="dash-section">
+      <h2 class="section-title" style="font-size:14px;">Most-upvoted open issues</h2>
+      <div id="feed-list"></div>
+    </div>
+  </div>
+
+  <footer class="note">Nagar Setu &mdash; SQLite Backend.</footer>
+</div>
+
+<script>
+const CATEGORIES = [
+  {id:'pothole', label:'Pothole', dept:'Roads', icon:'pothole'},
+  {id:'garbage_overflow', label:'Garbage overflow', dept:'Sanitation', icon:'garbage'},
+  {id:'broken_streetlight', label:'Broken streetlight', dept:'Electricity', icon:'lamp'},
+  {id:'water_leakage', label:'Water leakage', dept:'Water Supply', icon:'drop'}
+];
+const STAGES = ['submitted', 'in_progress', 'resolved'];
+
+const ICONS = {
+  pothole: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><ellipse cx="12" cy="13" rx="8" ry="5"/><path d="M5 13c1 2 4 3 7 3s6-1 7-3" stroke-dasharray="2 2"/><ellipse cx="12" cy="13" rx="3.4" ry="2" fill="currentColor" opacity="0.25"/></svg>',
+  garbage: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 8h12l-1 12H7L6 8z"/><path d="M4 8h16"/><path d="M9 8V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/><path d="M10 11v6M14 11v6"/></svg>',
+  lamp: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3v4"/><path d="M8 7h8l-1.5 3h-5L8 7z"/><path d="M12 10v11"/><path d="M8 21h8"/><path d="M6 6l1 2M18 6l-1 2" stroke-dasharray="1 2"/></svg>',
+  drop: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3c3 4 6 7.2 6 10.8A6 6 0 0 1 6 13.8C6 10.2 9 7 12 3z"/></svg>'
+};
+
+let issues = [];
+let departments = [];
+
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + '=')) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+async function loadDepartments() {
+  try {
+    const response = await fetch('/api/departments/');
+    const data = await response.json();
+    departments = data.departments;
+    
+    const filterSelect = document.getElementById('inbox-dept-filter');
+    filterSelect.innerHTML = '<option value="all">All Departments</option>' +
+      departments.map(d => `<option value="${d.id}">${d.name}</option>`).join('');
+  } catch (err) {
+    console.error('Error loading departments:', err);
+  }
+}
+
+async function loadIssues() {
+  try {
+    const response = await fetch('/api/issues/?scope=all');
+    const data = await response.json();
+    issues = data.issues;
+    
+    renderInbox();
+    renderDashboard();
+  } catch (err) {
+    console.error('Error fetching issues:', err);
+  }
+}
+
+/* ---------- Tabs Configuration ---------- */
+const ADMIN_TABS = [
+  {id:'inbox', label:'01 \u00a0Department inbox'},
+  {id:'dashboard', label:'02 \u00a0Public dashboard'}
+];
+
+function renderTabBar(){
+  const container = document.getElementById('tabs-container');
+  container.innerHTML = ADMIN_TABS.map((t,i)=>'<div class="tab '+(i===0?'active':'')+'" data-tab="'+t.id+'">'+t.label+'</div>').join('');
+  container.querySelectorAll('.tab').forEach(tab=>{
+    tab.addEventListener('click', ()=>switchTab(tab.dataset.tab));
+  });
+  switchTab(ADMIN_TABS[0].id);
+}
+
+function switchTab(name){
+  document.querySelectorAll('#tabs-container .tab').forEach(t=>t.classList.toggle('active', t.dataset.tab===name));
+  document.getElementById('panel-inbox').classList.toggle('hidden', name!=='inbox');
+  document.getElementById('panel-dashboard').classList.toggle('hidden', name!=='dashboard');
+  if(name==='dashboard') renderDashboard();
+  if(name==='inbox') renderInbox();
+}
+
+function escapeHtml(str){
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+function renderStageRow(stageIndex){
+  let html = '';
+  for(let i=0;i<STAGES.length;i++){
+    const stageLabel = STAGES[i] === 'submitted' ? 'Submitted' : STAGES[i] === 'in_progress' ? 'In Progress' : 'Resolved';
+    html += '<div class="pdot '+(i<=stageIndex?'done':'')+'" title="'+stageLabel+'"></div>';
+    if(i<STAGES.length-1){
+      html += '<div class="pline '+(i<stageIndex?'done':'')+'"></div>';
+    }
+  }
+  return html;
+}
+
+/* ---------- Admin inbox ---------- */
+document.getElementById('inbox-dept-filter').addEventListener('change', renderInbox);
+
+function renderInbox(){
+  const filterVal = document.getElementById('inbox-dept-filter').value;
+  const list = document.getElementById('inbox-list');
+  
+  const scoped = issues.filter(i => filterVal === 'all' || String(i.department) === filterVal);
+  if(scoped.length===0){
+    list.innerHTML = '<div class="empty-state">No dockets in this mailbox.</div>';
+    return;
+  }
+  
+  list.innerHTML = scoped.map(issue=>{
+    const stageIndex = STAGES.indexOf(issue.status);
+    const cat = CATEGORIES.find(c=>c.id===issue.category);
+    const icon = cat ? cat.icon : 'pothole';
+    
+    // Status update options
+    const options = STAGES.map(s => {
+      const selected = s === issue.status ? 'selected' : '';
+      const label = s === 'submitted' ? 'Submitted' : s === 'in_progress' ? 'In Progress' : 'Resolved';
+      return `<option value="${s}" ${selected}>${label}</option>`;
+    }).join('');
+
+    return '<div class="docket">'
+      + '<div class="docket-icon">'+ICONS[icon === 'lamp' ? 'lamp' : icon === 'garbage' ? 'garbage' : icon === 'drop' ? 'drop' : 'pothole']+'</div>'
+      + '<div class="docket-main">'
+        + '<div class="docket-id">TICKET ID: #'+issue.id+' &bull; Reported by: '+issue.reported_by_username+'</div>'
+        + '<div class="docket-desc" style="font-weight:700; font-size:15px;">'+escapeHtml(issue.title)+'</div>'
+        + '<div class="docket-desc">'+escapeHtml(issue.description)+'</div>'
+        + '<div class="docket-meta"><span>Category: '+issue.category.replace('_',' ')+'</span><span>Routed to: '+issue.department_name+'</span><span>'+issue.upvote_count+' upvotes</span><span>Location: '+issue.latitude+', '+issue.longitude+'</span></div>'
+        + (issue.photo ? '<div style="margin-top:8px;"><img src="'+issue.photo+'" class="photo-thumb" style="width:140px;height:100px;object-fit:cover;border:1.5px solid var(--line);border-radius:4px;"></div>' : '')
+        + '<div class="progress-row">'+renderStageRow(stageIndex)+'</div>'
+        + '<div class="admin-row-actions">'
+          + '<label style="margin: 0; font-size: 11px; font-weight: bold; margin-right: 8px;">Change Status:</label>'
+          + `<select class="status-select" data-id="${issue.id}" style="width: auto; padding: 4px 8px; font-family: sans-serif; font-size:12px;">${options}</select>`
+        + '</div>'
+      + '</div>'
+      + '<div class="stamp '+issue.status+'">'+issue.status.replace('_',' ')+'</div>'
+    + '</div>';
+  }).join('');
+
+  list.querySelectorAll('.status-select').forEach(sel=>{
+    sel.addEventListener('change', async ()=>{
+      const issueId = sel.dataset.id;
+      const newStatus = sel.value;
+      try {
+        const res = await fetch(`/api/issues/${issueId}/status/`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': getCookie('csrftoken')
+          },
+          body: JSON.stringify({ status: newStatus })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          await loadIssues();
+        } else {
+          alert("Error: " + (data.error || "Failed to update status"));
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    });
+  });
+}
+
+/* ---------- Dashboard ---------- */
+function renderDashboard(){
+  const total = issues.length;
+  const resolved = issues.filter(i=>i.status==='resolved').length;
+  const rate = total ? Math.round((resolved/total)*100) : 0;
+  const openCount = total - resolved;
+
+  // Average resolution time
+  const resolvedIssues = issues.filter(i=>i.status==='resolved');
+  let totalDays = 0;
+  resolvedIssues.forEach(i=>{
+    const diffTime = Math.abs(new Date(i.updated_at) - new Date(i.created_at));
+    const diffDays = diffTime / (1000 * 60 * 60 * 24);
+    totalDays += diffDays;
+  });
+  const avgTime = resolvedIssues.length ? (totalDays / resolvedIssues.length).toFixed(1) + ' days' : 'N/A';
+
+  document.getElementById('metric-grid').innerHTML = [
+    ['Total Issues', total],
+    ['Resolved', resolved],
+    ['Open', openCount],
+    ['Resolution rate', rate+'%'],
+    ['Avg Resolution Time', avgTime]
+  ].map(([lbl,num])=>'<div class="metric-card"><span class="num">'+num+'</span><span class="lbl">'+lbl+'</span></div>').join('');
+
+  // category bars
+  const catBars = document.getElementById('cat-bars');
+  const maxCatCount = Math.max(1, ...CATEGORIES.map(c=>issues.filter(i=>i.category===c.id).length));
+  catBars.innerHTML = CATEGORIES.map(c=>{
+    const count = issues.filter(i=>i.category===c.id).length;
+    const pct = Math.round((count/maxCatCount)*100);
+    return '<div class="bar-row"><span>'+c.label+'</span><div class="bar-track"><div class="bar-fill" style="width:'+pct+'%;"></div></div><span>'+count+'</span></div>';
+  }).join('');
+
+  // department performance
+  const depts = [...new Set(CATEGORIES.map(c=>c.dept))];
+  const deptBars = document.getElementById('dept-bars');
+  deptBars.innerHTML = depts.map(dept=>{
+    const deptIssues = issues.filter(i=>i.department_name===dept);
+    const deptResolved = deptIssues.filter(i=>i.status==='resolved').length;
+    const pct = deptIssues.length ? Math.round((deptResolved/deptIssues.length)*100) : 0;
+    return '<div class="bar-row"><span>'+dept+'</span><div class="bar-track"><div class="bar-fill dept" style="width:'+pct+'%;"></div></div><span>'+deptResolved+' resolved ('+pct+'%)</span></div>';
+  }).join('');
+
+  // feed sorted by upvotes, open issues only
+  const feedList = document.getElementById('feed-list');
+  const open = issues.filter(i=>i.status!=='resolved').sort((a,b)=> b.upvote_count - a.upvote_count).slice(0,6);
+  if(open.length===0){
+    feedList.innerHTML = '<div class="empty-state">All caught up — no open issues right now.</div>';
+  } else {
+    feedList.innerHTML = open.map(issue=>{
+      return '<div class="feed-item">'
+        + '<div class="feed-body"><b>'+escapeHtml(issue.title)+'</b><br>'+escapeHtml(issue.description)+'<div class="feed-meta">'+issue.category.replace('_',' ')+' · '+issue.department_name+' · '+issue.status.replace('_',' ')+' · '+issue.upvote_count+' upvotes</div></div>'
+      + '</div>';
+    }).join('');
+  }
+}
+
+async function init() {
+  renderTabBar();
+  await loadDepartments();
+  await loadIssues();
+}
+
+init();
+</script>
+</body>
+</html>
